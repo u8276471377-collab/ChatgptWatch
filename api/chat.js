@@ -1,10 +1,10 @@
 // Vercel Serverless Function: /api/chat
-// Maneja CORS, valida token y llama a OpenAI. Devuelve { reply: "..." }.
+// Proxy directo a OpenAI sin validación de token
 
 const allowCors = (handler) => async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-App-Token");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
@@ -19,7 +19,6 @@ module.exports = allowCors(async (req, res) => {
       return;
     }
 
-    // Vercel parsea JSON automáticamente si el header Content-Type es application/json
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const prompt = body && body.prompt ? String(body.prompt) : "";
 
@@ -28,20 +27,11 @@ module.exports = allowCors(async (req, res) => {
       return;
     }
 
-    const appToken = req.headers["x-app-token"];
-    if (!process.env.APP_TOKEN) {
-      // Si no configuras APP_TOKEN en Vercel, no bloqueamos (solo para pruebas)
-    } else if (appToken !== process.env.APP_TOKEN) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-
     if (!process.env.OPENAI_API_KEY) {
       res.status(500).json({ error: "OPENAI_API_KEY not configured" });
       return;
     }
 
-    // Llamada a OpenAI
     const apiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
