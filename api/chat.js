@@ -1,5 +1,5 @@
 // Vercel Serverless Function: /api/chat
-// Proxy directo a OpenAI sin validación de token
+// Proxy hacia Hugging Face Inference API (ejemplo con modelo gratuito)
 
 const allowCors = (handler) => async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -27,22 +27,19 @@ module.exports = allowCors(async (req, res) => {
       return;
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      res.status(500).json({ error: "OPENAI_API_KEY not configured" });
+    if (!process.env.HUGGINGFACE_API_KEY) {
+      res.status(500).json({ error: "HUGGINGFACE_API_KEY not configured" });
       return;
     }
 
-    const apiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    // Modelo gratuito de ejemplo: "tiiuae/falcon-7b-instruct"
+    const apiRes = await fetch("https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + process.env.OPENAI_API_KEY
+        "Authorization": "Bearer " + process.env.HUGGINGFACE_API_KEY
       },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7
-      })
+      body: JSON.stringify({ inputs: prompt })
     });
 
     const data = await apiRes.json();
@@ -55,15 +52,10 @@ module.exports = allowCors(async (req, res) => {
       return;
     }
 
-    const reply =
-      data && data.choices && data.choices[0] && data.choices[0].message
-        ? data.choices[0].message.content
-        : "";
-
-    if (!reply) {
-      res.status(502).json({ error: "Empty reply from model", raw: data });
-      return;
-    }
+    // Hugging Face devuelve un array con "generated_text"
+    const reply = Array.isArray(data) && data[0] && data[0].generated_text
+      ? data[0].generated_text
+      : JSON.stringify(data);
 
     res.status(200).json({ reply: reply });
   } catch (err) {
