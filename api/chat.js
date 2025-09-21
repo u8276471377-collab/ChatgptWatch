@@ -1,14 +1,10 @@
-// Vercel Serverless Function: /api/chat
-// Proxy hacia Hugging Face Inference API (ejemplo con modelo gratuito)
-
-const allowCors = (handler) => async (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") {
-    res.status(200).end();
-    return;
-  }
+res.setHeader("Access-Control-Allow-Origin", "*");
+res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
+res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+if (req.method === "OPTIONS") {
+  res.status(200).end();
+  return;
+}
   return handler(req, res);
 };
 
@@ -62,3 +58,4 @@ module.exports = allowCors(async (req, res) => {
     res.status(500).json({ error: err.message || "Internal error" });
   }
 });
+
