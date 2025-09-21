@@ -1,5 +1,5 @@
 {
-  "name": "chatgpt-proxy-vercel",
+  "name": "huggingface-proxy-vercel",
   "version": "1.0.0",
   "private": true,
   "type": "commonjs",
